@@ -316,7 +316,7 @@ function renderResult(analysis, rawMessage) {
 button.addEventListener("click", async () => {
   try {
     result.classList.remove("error-state");
-    
+
     // Prepara e valida os dados da mensagem ou conversa.
     const payload = buildApiPayload();
 
@@ -419,6 +419,82 @@ addMessageButton.addEventListener("click", addConversationMessage);
 
 addConversationMessage();
 addConversationMessage();
+
+const parseConversationButton =
+  document.getElementById("parse-conversation");
+
+parseConversationButton.addEventListener("click", () => {
+  const raw = document
+    .getElementById("conversation-paste")
+    .value.trim();
+
+  const lines = raw
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2 || lines.length > 30) {
+    alert("Collez entre 2 et 30 messages, un par ligne.");
+    return;
+  }
+
+  const messages = lines.map(line => {
+    const sentMatch = line.match(
+      /^(Moi|Me|Eu|Vous|Envoyé|Sent)\s*:\s*(.+)$/i
+    );
+
+    if (sentMatch) {
+      return {
+        direction: "Envoyé",
+        text: sentMatch[2].trim()
+      };
+    }
+
+    const receivedMatch = line.match(
+      /^(Reçu|Received)\s*:\s*(.+)$/i
+    );
+
+    if (receivedMatch) {
+      return {
+        direction: "Reçu",
+        text: receivedMatch[2].trim()
+      };
+    }
+
+    return {
+      direction: "Reçu",
+      text: line
+    };
+  });
+
+  if (
+    messages.some(m => !m.text) ||
+    messages
+      .map(m => `[Message] ${m.text}`)
+      .join("\n").length > 5000
+  ) {
+    alert("Conversation invalide ou supérieure à 5 000 caractères.");
+    return;
+  }
+
+  conversationContainer.replaceChildren();
+
+  messages.forEach(message => {
+    addConversationMessage();
+
+    const card = conversationContainer.lastElementChild;
+    card.querySelector("select").value = message.direction;
+    card.querySelector("textarea").value = message.text;
+  });
+
+  result.replaceChildren();
+  result.hidden = true;
+
+  conversationContainer.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+});
 
 function buildApiPayload() {
   const consent = document.getElementById("ai-consent").checked;
