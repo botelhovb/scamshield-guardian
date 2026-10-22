@@ -262,7 +262,6 @@ button:hover {
   font: inherit;
 }
 
-
 .result.error-state {
   background: #fff5f4;
   border: 1px solid #f4b4ae;
@@ -275,4 +274,20 @@ button:hover {
   font-weight: 600;
   line-height: 1.5;
   margin: 0;
+}
+
+.paste-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d0d5dd;
+}
+
+.paste-conversation textarea {
+  min-height: 130px;
+}
+
+.paste-conversation .secondary-button {
+  width: 100%;
 }
