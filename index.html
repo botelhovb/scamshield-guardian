@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield Guardian</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>ScamShield Guardian</h1>
+      <p>Détectez les signaux d'arnaque avant d'agir.</p>
+    </header>
+
+    <section class="panel">
+      
+<div class="mode-selector">
+  <button type="button" id="mode-single" class="mode-button active">
+    Message
+  </button>
+  <button type="button" id="mode-conversation" class="mode-button">
+    Conversation
+  </button>
+</div>
+
+<div id="single-input">
+  <label for="message">Message à analyser</label>
+  <textarea
+    id="message"
+    maxlength="5000"
+    placeholder="Collez ici un SMS ou un e-mail suspect..."
+  ></textarea>
+</div>
+
+<div id="conversation-input" hidden>
+  <p class="input-hint">
+    Ajoutez les messages dans l'ordre de la conversation.
+  </p>
+
+  <div id="conversation-messages"></div>
+
+  <button type="button" id="add-message" class="secondary-button">
+    + Ajouter un message
+  </button>
+</div>
+
+      <button id="analyze">Analyser le message</button>
+      <section
+        id="result"
+        class="result"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></section>        
+    </section>
+  </main>
+</body>
+</html>
