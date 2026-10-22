@@ -39,7 +39,31 @@
   <p class="input-hint">
     Ajoutez les messages dans l'ordre de la conversation.
   </p>
+  
+<div class="paste-conversation">
+  <label for="conversation-paste">
+    Coller une conversation complète
+  </label>
 
+  <textarea
+    id="conversation-paste"
+    placeholder="Collez ici votre conversation, avec un message par ligne..."
+  ></textarea>
+
+  <button
+    type="button"
+    id="parse-conversation"
+    class="secondary-button"
+  >
+    Préparer les messages
+  </button>
+
+  <p class="input-hint">
+    Vérifiez les messages et indiquez qui les a envoyés
+    avant de lancer l'analyse.
+  </p>
+</div>
+  
   <div id="conversation-messages"></div>
 
   <button type="button" id="add-message" class="secondary-button">
