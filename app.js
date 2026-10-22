@@ -313,34 +313,51 @@ function renderResult(analysis, rawMessage) {
   );
 }
 
-button.addEventListener("click", () => {
-  const message = messageInput.value.trim();
+button.addEventListener("click", async () => {
+  try {
+    result.classList.remove("error-state");
+    
+    // Prepara e valida os dados da mensagem ou conversa.
+    const payload = buildApiPayload();
 
-  if (!message) {
-    result.replaceChildren();
-    result.hidden = false;
-    addParagraph(result, "Veuillez saisir un message.");
-    return;
+    // Recupera o código informado pelo usuário.
+    const demoKey = document
+      .getElementById("demo-key")
+      ?.value.trim();
+
+    if (!demoKey) {
+      throw new Error("Veuillez saisir votre code d'accès.");
+    }
+
+    // Bloqueia novos cliques durante a análise.
+    button.disabled = true;
+    button.textContent = "Analyse IA en cours...";
+
+    // Envia a conversa ao Cloudflare Worker.
+    const report = await requestAiAnalysis(payload, demoKey);
+
+    // Apresenta o resultado gerado pela IA.
+    renderAiReport(report, payload);
+
+} catch (error) {
+  result.replaceChildren();
+  result.hidden = false;
+
+  result.classList.add("error-state");
+
+  addParagraph(
+    result,
+    "⚠ " + (error.message || "Une erreur est survenue."),
+    "error-message"
+  );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = currentMode === "conversation"
+      ? "Analyser la conversation"
+      : "Analyser le message";
   }
-
-  
-const conversation = extractConversationMessages(message);
-
-const hasDirections = conversation.some(
-  m => m.direction !== 'inconnu'
-);
-
-const textToAnalyze = hasDirections
-  ? conversation
-      .filter(m => m.direction === 'recu')
-      .map(m => m.content)
-      .join('\n')
-  : message;
-
-renderResult(analyzeMessage(textToAnalyze), message);
-
 });
-
 
 const singleModeButton = document.getElementById("mode-single");
 const conversationModeButton = document.getElementById("mode-conversation");
@@ -402,3 +419,169 @@ addMessageButton.addEventListener("click", addConversationMessage);
 
 addConversationMessage();
 addConversationMessage();
+
+function buildApiPayload() {
+  const consent = document.getElementById("ai-consent").checked;
+
+  if (!consent) {
+    throw new Error(
+      "Veuillez accepter l'analyse par intelligence artificielle."
+    );
+  }
+
+  if (currentMode === "conversation") {
+    const cards = Array.from(
+      conversationContainer.querySelectorAll(".conversation-card")
+    );
+
+    const messages = cards.map(card => ({
+      direction:
+        card.querySelector("select").value === "Reçu"
+          ? "received"
+          : "sent",
+      text: card.querySelector("textarea").value.trim()
+    }));
+
+    if (messages.length < 2 || messages.some(m => !m.text)) {
+      throw new Error(
+        "Ajoutez au moins deux messages et remplissez tous les champs."
+      );
+    }
+
+    if (
+      messages
+        .map(m => `[Message] ${m.text}`)
+        .join("\n").length > 5000
+    ) {
+      throw new Error(
+        "La limite est de 5 000 caractères par analyse."
+      );
+    }
+
+    return {
+      consent: true,
+      messages
+    };
+  }
+
+  const message = messageInput.value.trim();
+
+  if (!message || message.length > 5000) {
+    throw new Error(
+      "Saisissez un message de 5 000 caractères maximum."
+    );
+  }
+
+  return {
+    consent: true,
+    message
+  };
+}
+
+function renderAiReport(report, payload) {
+  result.replaceChildren();
+  result.hidden = false;
+
+  const labels = {
+    high: "Risque élevé",
+    medium: "Risque modéré",
+    low: "Risque faible",
+    needs_review: "Analyse à vérifier"
+  };
+
+  const badge = document.createElement("span");
+  badge.className = `risk-badge ${report.riskLevel}`;
+  badge.textContent = labels[report.riskLevel] || "Analyse limitée";
+  result.appendChild(badge);
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Résultat de l'analyse IA";
+  result.appendChild(heading);
+
+  addParagraph(result, report.summary);
+
+  if (report.analysisType === "conversation") {
+    const timelineTitle = document.createElement("h3");
+    timelineTitle.textContent = "Conversation analysée";
+    result.appendChild(timelineTitle);
+
+    payload.messages.forEach((message, index) => {
+      const messageId = index + 1;
+      const entry = document.createElement("div");
+      entry.className = "timeline-entry";
+
+      if (messageId === report.criticalMessageId) {
+        entry.classList.add("critical-message");
+      }
+
+      const title = document.createElement("strong");
+      title.textContent =
+        `Message ${messageId} — ` +
+        (message.direction === "received" ? "Reçu" : "Envoyé");
+
+      entry.appendChild(title);
+      addParagraph(entry, message.text, "timeline-quote");
+
+      const indicators = report.indicators.filter(
+        i => i.messageId === messageId
+      );
+
+      for (const indicator of indicators) {
+        addParagraph(entry, indicator.description, "timeline-signals");
+      }
+
+      result.appendChild(entry);
+    });
+  }
+
+  const actionTitle = document.createElement("h3");
+  actionTitle.textContent = "Que faire maintenant ?";
+  result.appendChild(actionTitle);
+
+  addParagraph(
+    result,
+    report.recommendedAction,
+    "recommended-action"
+  );
+
+  addParagraph(
+    result,
+    "Cette analyse ne prouve ni une fraude ni l'authenticité de l'expéditeur.",
+    "disclaimer"
+  );
+}
+
+
+async function requestAiAnalysis(payload, demoKey) {
+  const response = await fetch(
+    "https://scamshield-guardian-api.bebotelho.workers.dev/analyze",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-ScamShield-Demo-Key": demoKey
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Code d'accès incorrect.");
+    }
+
+    if (response.status === 429) {
+      throw new Error("Limite d'analyses atteinte.");
+    }
+
+    throw new Error("Le service d'analyse est momentanément indisponible.");
+  }
+
+  const report = await response.json();
+
+  if (report.status !== "completed") {
+    throw new Error("Réponse d'analyse inattendue.");
+  }
+
+  return report;
+}
