@@ -291,3 +291,7 @@ button:hover {
 .paste-conversation .secondary-button {
   width: 100%;
 }
+.risk-badge.low {
+  background: #027a48;
+  color: #ffffff;
+}
