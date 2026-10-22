@@ -227,3 +227,52 @@ button:hover {
 .secondary-button:hover {
   background: #eef4ff;
 }
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475467;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.consent-label input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #2458d3;
+}
+
+
+.demo-access {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-access input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font: inherit;
+}
+
+
+.result.error-state {
+  background: #fff5f4;
+  border: 1px solid #f4b4ae;
+  border-left: 5px solid #b42318;
+}
+
+.error-message {
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
