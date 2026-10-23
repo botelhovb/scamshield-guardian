@@ -652,12 +652,18 @@ async function requestAiAnalysis(payload, demoKey) {
 
     throw new Error("Le service d'analyse est momentanément indisponible.");
   }
-
+  
   const report = await response.json();
+
+  // Distinguir falha da IA de uma análise concluída.
+  if (report.status === "unavailable") {
+    throw new Error(
+      "Analyse indisponible. Aucun niveau de risque n'a pu être établi."
+    );
+  }
 
   if (report.status !== "completed") {
     throw new Error("Réponse d'analyse inattendue.");
   }
 
   return report;
-}
