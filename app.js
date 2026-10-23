@@ -652,7 +652,7 @@ async function requestAiAnalysis(payload, demoKey) {
 
     throw new Error("Le service d'analyse est momentanément indisponible.");
   }
-  
+
   const report = await response.json();
 
   // Distinguir falha da IA de uma análise concluída.
@@ -667,3 +667,4 @@ async function requestAiAnalysis(payload, demoKey) {
   }
 
   return report;
+}
